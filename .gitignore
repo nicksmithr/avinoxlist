@@ -5,3 +5,5 @@ __pycache__/
 /tmp/
 node_modules/
 .wrangler/
+package.json
+package-lock.json
