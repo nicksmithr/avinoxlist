@@ -1,0 +1,21 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "avinoxlist-email",
+  "main": "src/index.js",
+  "compatibility_date": "2026-04-26",
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "vars": {
+    "ALLOWED_ORIGINS": "https://avinoxlist.com,https://www.avinoxlist.com",
+    "BEEHIIV_SUBSCRIBE_URL": "https://api.beehiiv.com/v2/publications/pub_28ae8bd4-e541-4b69-ad90-4efaffe1ce67/subscriptions"
+  },
+  "d1_databases": [
+    {
+      "binding": "EMAILS_DB",
+      "database_name": "avinoxlist-email",
+      "database_id": "f0cf5406-a59b-4379-9708-747875236a1a"
+    }
+  ]
+}

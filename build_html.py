@@ -627,7 +627,7 @@ PIVOT_AMPD_GALLERY = [
 
 for rec in bikes_data:
     rec["source"] = _normalize_external_url(rec.get("source"))
-    rec["photo"] = _normalize_external_url(rec.get("photo"))
+    rec["photo"] = _to_r2_image_url(_normalize_external_url(rec.get("photo")))
     rec["instagram"] = _normalize_external_url(rec.get("instagram"))
     k = (rec["brand"], rec["model"], rec["build"])
     if k in DIRECT_IMAGES:

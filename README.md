@@ -34,6 +34,82 @@ That's it. Writes `index.html` to the repo root.
 
 Builds, commits with a timestamped message, and pushes to `main`. Cloudflare Pages auto-deploys ~20 seconds later.
 
+## Cloudflare data stack (R2 + D1 + email Worker)
+
+This repo now includes a minimal Cloudflare backend while keeping the frontend static:
+
+- `cloudflare/email-worker/` — Worker endpoint for newsletter signup (`POST /subscribe`)
+- `cloudflare/d1/schema.sql` — D1 schema for `subscribers` and `bikes`
+- `scripts/mirror_images_to_r2.py` — downloads image URLs from `index.html` and uploads to R2
+- `scripts/sync_bikes_to_d1.py` — exports bike rows from `index.html` into D1
+
+### 1) Install Wrangler
+
+```bash
+npm i -D wrangler
+npx wrangler login
+```
+
+### 2) Create Cloudflare resources
+
+```bash
+npx wrangler r2 bucket create avinoxlist-images
+npx wrangler d1 create avinoxlist-email
+npx wrangler d1 create avinoxlist-bikes
+```
+
+Run schema:
+
+```bash
+npx wrangler d1 execute avinoxlist-email --remote --file cloudflare/d1/schema.sql
+npx wrangler d1 execute avinoxlist-bikes --remote --file cloudflare/d1/schema.sql
+```
+
+### 3) Deploy newsletter Worker
+
+Update `cloudflare/email-worker/wrangler.jsonc`:
+
+- replace `database_id` with the `avinoxlist-email` D1 ID
+- set `BEEHIIV_SUBSCRIBE_URL` (Beehiiv endpoint)
+
+Set Beehiiv API key secret:
+
+```bash
+cd cloudflare/email-worker
+npx wrangler secret put BEEHIIV_API_KEY
+npx wrangler deploy
+```
+
+### 4) Mirror bike images to R2
+
+Build first so image URLs are current:
+
+```bash
+python3 build_html.py
+python3 scripts/mirror_images_to_r2.py --bucket avinoxlist-images --public-base-url https://images.avinoxlist.com
+```
+
+### 5) Switch site output to R2 URLs + external services
+
+Set Pages environment variables:
+
+- `R2_PUBLIC_BASE_URL=https://images.avinoxlist.com`
+- `NEWSLETTER_ACTION_URL=https://<your-worker-domain>/subscribe`
+- `SKIMLINKS_ACCOUNT_ID=<your_skimlinks_account_id>`
+- `CF_WEB_ANALYTICS_TOKEN=<your_cloudflare_beacon_token>`
+
+Then build command in Pages:
+
+```bash
+python3 -m pip install -r requirements.txt && python3 build_html.py
+```
+
+### 6) Sync bikes into D1
+
+```bash
+python3 scripts/sync_bikes_to_d1.py --database avinoxlist-bikes --apply
+```
+
 ## Domain
 
 `avinoxlist.com` (Cloudflare-managed). The Pages project is connected directly via Cloudflare's custom-domain UI — no DNS records to copy by hand.
