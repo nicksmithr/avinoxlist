@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 from datetime import datetime, timezone
 from build_with_photos import bikes, IG, SPECIFIC_IG, SECONDARY_IG
 
-R2_PUBLIC_BASE_URL = os.getenv("R2_PUBLIC_BASE_URL", "").rstrip("/")
+R2_PUBLIC_BASE_URL = os.getenv("R2_PUBLIC_BASE_URL", "https://images.avinoxlist.com").rstrip("/")
 R2_IMAGE_MAP_PATH = os.getenv("R2_IMAGE_MAP_PATH", "tmp/r2-image-map.json")
 NEWSLETTER_ACTION_URL = os.getenv(
     "NEWSLETTER_ACTION_URL",
