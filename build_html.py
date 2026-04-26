@@ -1,7 +1,62 @@
 """Build a single self-contained HTML page for the Avinox bike comparison."""
 import json
+import hashlib
+import os
+from urllib.parse import urlparse
 from datetime import datetime, timezone
 from build_with_photos import bikes, IG, SPECIFIC_IG, SECONDARY_IG
+
+R2_PUBLIC_BASE_URL = os.getenv("R2_PUBLIC_BASE_URL", "").rstrip("/")
+R2_IMAGE_MAP_PATH = os.getenv("R2_IMAGE_MAP_PATH", "tmp/r2-image-map.json")
+NEWSLETTER_ACTION_URL = os.getenv(
+    "NEWSLETTER_ACTION_URL",
+    "https://avinoxlist-email.nicksm10.workers.dev/subscribe",
+)
+SKIMLINKS_ACCOUNT_ID = os.getenv("SKIMLINKS_ACCOUNT_ID", "ACCOUNT_ID")
+CF_WEB_ANALYTICS_TOKEN = os.getenv("CF_WEB_ANALYTICS_TOKEN", "")
+
+R2_IMAGE_MAP = {}
+if os.path.exists(R2_IMAGE_MAP_PATH):
+    try:
+        with open(R2_IMAGE_MAP_PATH, "r", encoding="utf-8") as map_file:
+            R2_IMAGE_MAP = json.load(map_file)
+    except Exception:
+        R2_IMAGE_MAP = {}
+
+
+def _file_ext_from_url(url):
+    path = urlparse(url).path.lower()
+    ext = os.path.splitext(path)[1]
+    if ext in {".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif"}:
+        return ext
+    return ".jpg"
+
+
+def _to_r2_image_url(source_url):
+    if not R2_PUBLIC_BASE_URL or not source_url:
+        return source_url
+    if source_url in R2_IMAGE_MAP:
+        return R2_IMAGE_MAP[source_url]
+    # If this source did not upload successfully, preserve the original URL.
+    # This avoids broken cards when a remote host rate-limits downloads.
+    if R2_IMAGE_MAP:
+        return source_url
+    digest = hashlib.sha1(source_url.encode("utf-8")).hexdigest()
+    ext = _file_ext_from_url(source_url)
+    return f"{R2_PUBLIC_BASE_URL}/bikes/{digest}{ext}"
+
+
+def _normalize_external_url(url):
+    if not url or not isinstance(url, str):
+        return url
+    value = url.strip()
+    if value.startswith(("http://", "https://", "mailto:", "tel:")):
+        return value
+    if value.startswith("//"):
+        return f"https:{value}"
+    if value.startswith("www.") or "." in value:
+        return f"https://{value}"
+    return value
 
 # Convert bikes list to dict structure for JSON embedding
 keys = [
@@ -571,13 +626,16 @@ PIVOT_AMPD_GALLERY = [
 ]
 
 for rec in bikes_data:
+    rec["source"] = _normalize_external_url(rec.get("source"))
+    rec["photo"] = _normalize_external_url(rec.get("photo"))
+    rec["instagram"] = _normalize_external_url(rec.get("instagram"))
     k = (rec["brand"], rec["model"], rec["build"])
     if k in DIRECT_IMAGES:
-        rec["images"] = DIRECT_IMAGES[k]
-        rec["directImage"] = DIRECT_IMAGES[k][0]
+        rec["images"] = [_to_r2_image_url(url) for url in DIRECT_IMAGES[k]]
+        rec["directImage"] = rec["images"][0]
     elif rec["brand"] == "Pivot" and rec["model"] == "Shuttle AMP'd":
-        rec["images"] = PIVOT_AMPD_GALLERY
-        rec["directImage"] = PIVOT_AMPD_GALLERY[0]
+        rec["images"] = [_to_r2_image_url(url) for url in PIVOT_AMPD_GALLERY]
+        rec["directImage"] = rec["images"][0]
     else:
         rec["images"] = []
         rec["directImage"] = None
@@ -723,6 +781,68 @@ body {
   max-width: 640px;
   font-weight: 400;
   line-height: 1.55;
+}
+
+/* === NEWSLETTER === */
+.newsletter {
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  padding: 22px 32px;
+}
+.newsletter-inner {
+  max-width: 1600px;
+  margin: 0 auto;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.newsletter-copy {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.newsletter-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.newsletter-input {
+  min-width: 280px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: #FEFEFE;
+  color: var(--text);
+  padding: 10px 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  outline: none;
+}
+.newsletter-input:focus { border-color: var(--text); }
+.newsletter-submit {
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  background: var(--accent);
+  color: #FEFEFE;
+  padding: 10px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+}
+.newsletter-submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.newsletter-status {
+  min-height: 18px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: var(--text-3);
 }
 
 /* === STATS BAR === */
@@ -1738,6 +1858,8 @@ table.bikes tr.m1 td:first-child { border-left: 3px solid var(--text-3); }
 
 @media (max-width: 768px) {
   .hero { padding: 40px 20px 24px; }
+  .newsletter { padding: 16px 20px; }
+  .newsletter-input { min-width: 100%; }
   .hero-inner { grid-template-columns: 1fr; }
   .hero-meta { text-align: left; }
   .stat { padding: 16px 20px; border-right: none; border-bottom: 1px solid var(--border); }
@@ -1764,6 +1886,17 @@ table.bikes tr.m1 td:first-child { border-left: 3px solid var(--text-3); }
     </div>
   </div>
 </header>
+
+<section class="newsletter">
+  <div class="newsletter-inner">
+    <p class="newsletter-copy">New Avinox launches, price drops, and weight updates. Monthly. No spam.</p>
+    <form class="newsletter-form" id="newsletter-form" action="__NEWSLETTER_ACTION_URL__" method="post">
+      <input class="newsletter-input" id="newsletter-email" type="email" name="email" placeholder="you@example.com" required>
+      <button class="newsletter-submit" id="newsletter-submit" type="submit">Subscribe</button>
+      <span class="newsletter-status" id="newsletter-status" aria-live="polite"></span>
+    </form>
+  </div>
+</section>
 
 <nav class="filters">
   <div class="filters-inner">
@@ -2458,6 +2591,35 @@ $$('.view-toggle button').forEach(btn => {
 $('#modal-bg').addEventListener('click', e => { if (e.target === $('#modal-bg')) closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
+const newsletterForm = $('#newsletter-form');
+if (newsletterForm) {
+  newsletterForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const emailInput = $('#newsletter-email');
+    const submitBtn = $('#newsletter-submit');
+    const status = $('#newsletter-status');
+    const email = (emailInput?.value || '').trim();
+    if (!email) return;
+
+    submitBtn.disabled = true;
+    status.textContent = 'Submitting...';
+    try {
+      const response = await fetch(newsletterForm.action, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      if (!response.ok) throw new Error('Subscription failed');
+      status.textContent = 'Thanks - check your inbox for confirmation.';
+      newsletterForm.reset();
+    } catch (err) {
+      status.textContent = 'Subscription failed. Please try again.';
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+}
+
 // === INIT ===
 // Last-refresh relative time
 (function() {
@@ -2481,6 +2643,8 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal()
 
 render();
 </script>
+__SKIMLINKS_SCRIPT__
+__CF_BEACON_SCRIPT__
 </body>
 </html>
 """
@@ -2489,8 +2653,19 @@ html_out = HTML.replace("__BIKES_JSON__", bikes_json)
 html_out = html_out.replace("__STATS_JSON__", stats_json)
 html_out = html_out.replace("__COUNTRIES_JSON__", countries_json)
 html_out = html_out.replace("__BUILD_TIMESTAMP__", datetime.now(timezone.utc).isoformat())
-
-import os
+html_out = html_out.replace("__NEWSLETTER_ACTION_URL__", NEWSLETTER_ACTION_URL)
+html_out = html_out.replace(
+    "__SKIMLINKS_SCRIPT__",
+    f'<script async src="https://s.skimresources.com/js/{SKIMLINKS_ACCOUNT_ID}.skimlinks.js"></script>',
+)
+if CF_WEB_ANALYTICS_TOKEN:
+    cf_beacon = (
+        "<script defer src=\"https://static.cloudflareinsights.com/beacon.min.js\" "
+        f"data-cf-beacon='{{\"token\": \"{CF_WEB_ANALYTICS_TOKEN}\"}}'></script>"
+    )
+else:
+    cf_beacon = "<!-- Set CF_WEB_ANALYTICS_TOKEN to enable Cloudflare Web Analytics -->"
+html_out = html_out.replace("__CF_BEACON_SCRIPT__", cf_beacon)
 out_path = 'index.html'
 with open(out_path, 'w', encoding='utf-8') as f:
     f.write(html_out)
