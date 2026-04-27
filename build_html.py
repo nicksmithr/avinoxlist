@@ -525,9 +525,9 @@ DIRECT_IMAGES = {
     ("MAXX", "FAB.4 ELA", "Configurable + 800Wh"): [
         "https://www.maxx.de/_thumbnails_/10/3612_Fab4_ELA_5000x3400.webp?m=1775650112",
     ],
-    # Unno Mith — official imgix-served PNG
+    # Unno Mith — teamcycles.com product image
     ("Unno", "Mith", "(updated M2S)"): [
-        "https://www.unno.com/_next/image?url=https%3A%2F%2Fm.unno.com%2F2f6b692259e731d57de52c386890abf22ea1ac7a-3000x2000.png%253Ffit%253Dmin%2526auto%253Dformat%2526w%253D3000%2526q%253D100&w=2048&q=90",
+        "https://www.teamcycles.com/images/products/2/27/27888634c155394aae66d0f9a5b7cf976ab9f715-1710x1200-1.webp",
     ],
     # Velduro Rogue R — Shopify CDN
     ("Velduro", "Rogue R", "(complete bike)"): [
@@ -1206,7 +1206,7 @@ select.chip {
 .bike-card.m1 { border-left: 3px solid var(--text-3); }
 
 .bike-card-image {
-  height: 180px;
+  aspect-ratio: 16 / 9;
   position: relative;
   overflow: hidden;
   display: flex; align-items: center; justify-content: center;
@@ -1228,7 +1228,7 @@ select.chip {
 }
 .bike-card-image::after {
   content: ''; position: absolute; right: -40px; bottom: -40px;
-  width: 180px; height: 180px;
+  width: 65%; aspect-ratio: 1; max-width: 200px;
   border: 1px solid rgba(0,0,0,0.06);
   border-radius: 50%;
   pointer-events: none;
