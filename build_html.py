@@ -571,10 +571,12 @@ DIRECT_IMAGES = {
     ("Teewing", "Flux One", "A (entry)"): [
         "https://zv9lm0hjjd.wpdns.site/wp-content/uploads/2026/03/teewing-flux-2026-blue-silver.webp",
     ],
-    # Teewing Turbo Force — single dataset row, 2 colour options
-    ("Teewing", "Turbo Force", "(US-only)"): [
-        "https://zv9lm0hjjd.wpdns.site/wp-content/uploads/2026/02/teewing-turbo-force-2026-black-gold-1024x580.webp",
-        "https://zv9lm0hjjd.wpdns.site/wp-content/uploads/2026/02/teewing-turbo-force-2026-blue-1024x580.webp",
+    # Teewing Turbo Force — per-build from teewingbikes.com Shopify CDN
+    ("Teewing", "Turbo Force", "Pro"): [
+        "https://teewingbikes.com/cdn/shop/files/TurbeForceproblack.jpg?v=1775716875&width=875",
+    ],
+    ("Teewing", "Turbo Force", "XT (entry)"): [
+        "https://teewingbikes.com/cdn/shop/files/TurbeForceXTBlue.jpg?v=1775717658&width=1500",
     ],
     # YT Decoy X — Pinkbike-hosted launch image (replaces yt-industries.com URL)
     ("YT", "Decoy X", "Launch Edition"): [

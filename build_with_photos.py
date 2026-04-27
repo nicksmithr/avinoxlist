@@ -1003,39 +1003,50 @@ bikes.append([
 ])
 
 # ===== TEEWING =====
-tw_url = "https://dripebikes.com/bikes/teewing-dji-avinox-powered-electric-mountain-bike"
+tw_url = "https://teewingbikes.com/collections/electric-bikes"
 bikes.append([
-    "Teewing", "Turbo Force", "(US-only)", "China/USA", "UPD",
+    "Teewing", "Turbo Force", "Pro", "China/EU", "UPD",
     "M2S", 1300, 130, 800, "Avinox 800Wh integrated", "No",
     160, 150, "Carbon", "Mullet",
     None, "~22-23kg estimate",
     "FOX/RockShox Performance", "FOX Float", "SRAM AXS", "SRAM/Magura 4-pot", "Generic", "Generic",
-    None, None, 4999, None, None,
-    tw_url, IG["Teewing"],
-    "USA-only via Drip e-Bikes. Cheapest Avinox in USA.",
-    tw_url
+    None, 8999, None, None, None,
+    "https://teewingbikes.com/collections/electric-bikes/products/turbo-force-pro", IG["Teewing"],
+    "Top Turbo Force build.",
+    "https://teewingbikes.com/collections/electric-bikes/products/turbo-force-pro"
 ])
 bikes.append([
-    "Teewing", "Flux One", "A (entry)", "China/USA", "NEW",
+    "Teewing", "Turbo Force", "XT (entry)", "China/EU", "NEW",
+    "M2S", 1300, 130, 800, "Avinox 800Wh integrated", "No",
+    160, 150, "Carbon", "Mullet",
+    None, "~22-23kg estimate",
+    "FOX/RockShox Performance", "FOX Float", "SRAM AXS", "SRAM/Magura 4-pot", "Generic", "Generic",
+    None, 5899, None, None, None,
+    "https://teewingbikes.com/collections/electric-bikes/products/turbo-force-xt", IG["Teewing"],
+    "Entry Turbo Force build.",
+    "https://teewingbikes.com/collections/electric-bikes/products/turbo-force-xt"
+])
+bikes.append([
+    "Teewing", "Flux One", "A (entry)", "China/EU", "UPD",
     "M2S", 1300, 150, 800, "Avinox 800Wh integrated", "No",
     180, 178, "CAT 5 Carbon, high-pivot", "29 / Mullet flip",
     None, "Not published",
     "FOX 38", "FOX Float X2", "SRAM mech AXS", "SRAM Maven Silver", "DT Swiss", "Generic",
-    None, None, 7999, None, None,
-    "https://dripebikes.com", IG["Teewing"],
+    None, 6899, None, None, None,
+    "https://teewingbikes.com/collections/electric-bikes/products/flux-one-a", IG["Teewing"],
     "Longest travel of any Avinox bike. High-pivot.",
-    "https://dripebikes.com"
+    "https://teewingbikes.com/collections/electric-bikes/products/flux-one-a"
 ])
 bikes.append([
-    "Teewing", "Flux One", "Pro", "China/USA", "NEW",
+    "Teewing", "Flux One", "Pro", "China/EU", "UPD",
     "M2S", 1300, 150, 800, "Avinox 800Wh integrated", "No",
     180, 178, "CAT 5 Carbon, high-pivot", "29 / Mullet",
     None, "Not published",
     "FOX Podium Factory", "FOX Float X2 Factory", "SRAM AXS X0", "SRAM Maven Ultimate", "DT Swiss carbon", "Generic",
-    None, None, None, None, None,
-    "https://dripebikes.com", IG["Teewing"],
+    None, 8999, None, None, None,
+    "https://teewingbikes.com/collections/electric-bikes/products/flux-one-pro", IG["Teewing"],
     "Top high-pivot Teewing.",
-    "https://dripebikes.com"
+    "https://teewingbikes.com/collections/electric-bikes/products/flux-one-pro"
 ])
 
 # ===== THÖMUS =====
