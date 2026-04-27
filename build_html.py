@@ -2,6 +2,7 @@
 import json
 import hashlib
 import os
+import struct
 from urllib.parse import urlparse
 from datetime import datetime, timezone
 from build_with_photos import bikes, IG, SPECIFIC_IG, SECONDARY_IG
@@ -22,6 +23,78 @@ if os.path.exists(R2_IMAGE_MAP_PATH):
             R2_IMAGE_MAP = json.load(map_file)
     except Exception:
         R2_IMAGE_MAP = {}
+
+
+CONTAINER_AR = 16 / 9
+
+IMAGE_CACHE_DIR = os.getenv("IMAGE_CACHE_DIR", "tmp/r2-image-cache")
+_IMAGE_DIMS = {}
+
+
+def _get_image_size(path):
+    """Read width/height from JPEG, PNG, or WebP header bytes."""
+    try:
+        with open(path, "rb") as f:
+            data = f.read(32)
+            if data[:2] == b"\xff\xd8":
+                f.seek(2)
+                while True:
+                    marker = f.read(2)
+                    if len(marker) < 2:
+                        return None, None
+                    if marker[0] != 0xFF:
+                        return None, None
+                    if marker[1] in (0xC0, 0xC2):
+                        f.read(3)
+                        h, w = struct.unpack(">HH", f.read(4))
+                        return w, h
+                    length = struct.unpack(">H", f.read(2))[0]
+                    f.read(length - 2)
+            if data[:8] == b"\x89PNG\r\n\x1a\n":
+                w, h = struct.unpack(">II", data[16:24])
+                return w, h
+            if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+                if data[12:16] == b"VP8 ":
+                    w = (data[26] | (data[27] << 8)) & 0x3FFF
+                    h = (data[28] | (data[29] << 8)) & 0x3FFF
+                    return w, h
+                if data[12:16] == b"VP8L":
+                    bits = struct.unpack("<I", data[21:25])[0]
+                    return (bits & 0x3FFF) + 1, ((bits >> 14) & 0x3FFF) + 1
+                if data[12:16] == b"VP8X":
+                    f.seek(24)
+                    d = f.read(6)
+                    return (d[0] | (d[1] << 8) | (d[2] << 16)) + 1, (d[3] | (d[4] << 8) | (d[5] << 16)) + 1
+    except Exception:
+        pass
+    return None, None
+
+
+def _load_image_dims():
+    """Build a map of R2 URL basename -> aspect ratio from the local cache."""
+    if not os.path.isdir(IMAGE_CACHE_DIR):
+        return
+    for fname in os.listdir(IMAGE_CACHE_DIR):
+        path = os.path.join(IMAGE_CACHE_DIR, fname)
+        w, h = _get_image_size(path)
+        if w and h:
+            _IMAGE_DIMS[fname] = w / h
+
+
+_load_image_dims()
+
+
+def _image_scale(r2_url):
+    """Compute CSS scale so all bikes appear a similar size in a 16:9 container."""
+    if not r2_url:
+        return 1.0
+    fname = r2_url.rsplit("/", 1)[-1]
+    ar = _IMAGE_DIMS.get(fname)
+    if not ar:
+        return 1.0
+    if ar >= CONTAINER_AR:
+        return 1.0
+    return min(CONTAINER_AR / ar, 1.4)
 
 
 def _file_ext_from_url(url):
@@ -639,6 +712,7 @@ for rec in bikes_data:
     else:
         rec["images"] = []
         rec["directImage"] = None
+    rec["imageScale"] = round(_image_scale(rec["directImage"]), 2)
 
 # Compute summary stats
 brands = sorted(set(b["brand"] for b in bikes_data))
@@ -1210,6 +1284,7 @@ select.chip {
   position: relative;
   overflow: hidden;
   display: flex; align-items: center; justify-content: center;
+  transition: transform 0.3s ease;
   --motor-color: rgba(0,0,0,0.02);
   background:
     radial-gradient(circle at 30% 30%, var(--motor-color), transparent 60%),
@@ -1235,9 +1310,8 @@ select.chip {
 }
 .bike-card-image img {
   width: 100%; height: 100%; object-fit: cover;
-  transition: transform 0.3s; position: relative; z-index: 1;
+  position: relative; z-index: 1;
 }
-.bike-card:hover .bike-card-image img { transform: scale(1.04); }
 
 .card-art {
   position: relative; width: 100%; height: 100%;
@@ -1306,7 +1380,7 @@ select.chip {
   mix-blend-mode: darken;
   pointer-events: none;
 }
-.bike-card:hover .card-art-img:not(.failed) { transform: scale(1.04); }
+.bike-card:hover .bike-card-image { transform: scale(1.02); }
 .card-art-img.failed { display: none; }
 /* When image is loaded, hide the procedural typographic backdrop entirely */
 .bike-card-image:has(.card-art-img:not(.failed)) .card-art,
@@ -2234,8 +2308,9 @@ function renderCard(b) {
   </div>`;
 
   // Image overlay (if available) — covers the art, fades to art on error
+  const scaleStyle = b.imageScale && b.imageScale !== 1 ? ` style="transform:scale(${b.imageScale})"` : '';
   const imgOverlay = b.directImage
-    ? `<img class="card-art-img" src="${b.directImage}" alt="${b.brand} ${b.model}" loading="lazy" onerror="this.classList.add('failed')">`
+    ? `<img class="card-art-img" src="${b.directImage}" alt="${b.brand} ${b.model}" loading="lazy"${scaleStyle} onerror="this.classList.add('failed')">`
     : '';
 
   // Pricing display: locale-aware
