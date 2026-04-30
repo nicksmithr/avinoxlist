@@ -578,6 +578,13 @@ DIRECT_IMAGES = {
     ("Teewing", "Turbo Force", "XT (entry)"): [
         "https://teewingbikes.com/cdn/shop/files/TurbeForceXTBlue.jpg?v=1775717658&width=1500",
     ],
+    # Orange Phase Avinox — Shopify CDN render
+    ("Orange", "Phase Avinox", "Factory"): [
+        "https://cdn.shopify.com/s/files/1/0901/8304/1371/files/2026_PHASE_DJI_Studio_angle.png?v=1772709970",
+    ],
+    ("Orange", "Phase Avinox", "RS"): [
+        "https://cdn.shopify.com/s/files/1/0901/8304/1371/files/2026_PHASE_DJI_Studio_angle.png?v=1772709970",
+    ],
     # YT Decoy X — Pinkbike-hosted launch image (replaces yt-industries.com URL)
     ("YT", "Decoy X", "Launch Edition"): [
         "https://c02.purpledshub.com/uploads/sites/39/2026/04/YT-Decoy-X.jpg?webp=1&w=1200",

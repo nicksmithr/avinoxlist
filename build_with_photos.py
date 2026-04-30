@@ -1049,6 +1049,31 @@ bikes.append([
     "https://teewingbikes.com/collections/electric-bikes/products/flux-one-pro"
 ])
 
+# ===== ORANGE =====
+or_url = "https://orangebikes.com/pages/phase-avinox-model"
+bikes.append([
+    "Orange", "Phase Avinox", "Factory", "UK", "NEW",
+    "M2S", 1300, 130, 800, "Avinox 800Wh integrated", "No",
+    160, 160, "Aluminium", "Mullet (MX)",
+    None, None,
+    "FOX 38 Factory", "FOX Float X2 Factory", "SRAM AXS", "SRAM Maven", "Generic", "Generic",
+    8750, None, None, None, None,
+    or_url, "https://www.instagram.com/orangebikes/",
+    "Handbuilt in Halifax. First Orange e-MTB with Avinox.",
+    or_url
+])
+bikes.append([
+    "Orange", "Phase Avinox", "RS", "UK", "NEW",
+    "M2S", 1300, 130, 800, "Avinox 800Wh integrated", "No",
+    160, 160, "Aluminium", "Mullet (MX)",
+    None, None,
+    "RockShox ZEB", "RockShox Super Deluxe", "SRAM AXS", "SRAM Maven", "Generic", "Generic",
+    8250, None, None, None, None,
+    or_url, "https://www.instagram.com/orangebikes/",
+    "RS-spec Phase Avinox.",
+    or_url
+])
+
 # ===== THÖMUS =====
 th_url = "https://thoemus.ch/en/oberrider/"
 bikes.append([
