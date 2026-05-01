@@ -585,6 +585,13 @@ DIRECT_IMAGES = {
     ("Orange", "Phase Avinox", "RS"): [
         "https://cdn.shopify.com/s/files/1/0901/8304/1371/files/2026_PHASE_DJI_Studio_angle.png?v=1772709970",
     ],
+    # Propain Ekano 3 AL — ebike-mtb.com review image
+    ("Propain", "Ekano 3 AL", "Trail (from)"): [
+        "https://ebike-mtb.com/wp-content/uploads/sites/2/2026/04/Propain_Ekano_3_AL_EMTB_WEB-5252.jpg",
+    ],
+    ("Propain", "Ekano 3 AL", "Enduro (from)"): [
+        "https://ebike-mtb.com/wp-content/uploads/sites/2/2026/04/Propain_Ekano_3_AL_EMTB_WEB-5252.jpg",
+    ],
     # YT Decoy X — Pinkbike-hosted launch image (replaces yt-industries.com URL)
     ("YT", "Decoy X", "Launch Edition"): [
         "https://c02.purpledshub.com/uploads/sites/39/2026/04/YT-Decoy-X.jpg?webp=1&w=1200",
@@ -1487,6 +1494,12 @@ select.chip {
 }
 .bike-card-price-currency { font-size: 12px; color: var(--text-3); font-weight: 400; }
 .bike-card-price-na { color: var(--text-3); font-size: 13px; font-family: 'Inter', sans-serif; font-weight: 400; }
+.converted-flag { color: var(--text-3); font-size: 11px; cursor: help; margin-left: 2px; }
+.converted-link { color: var(--accent); text-decoration: none; font-size: 11px; cursor: pointer; }
+.converted-link:hover { text-decoration: underline; }
+.conversion-note { font-size: 11px; color: var(--text-3); margin-left: auto; }
+.conversion-note a { color: var(--accent); text-decoration: none; }
+.conversion-note a:hover { text-decoration: underline; }
 
 /* === TABLE VIEW === */
 .table-wrap {
@@ -2015,6 +2028,15 @@ table.bikes tr.m1 td:first-child { border-left: 3px solid var(--text-3); }
       <option value="price-desc">Price ↓</option>
     </select>
 
+    <span class="filter-label" style="margin-left:8px;">Currency</span>
+    <select class="chip" id="currency-select">
+      <option value="gbp">£ GBP</option>
+      <option value="eur">€ EUR</option>
+      <option value="usd">$ USD</option>
+      <option value="cad">C$ CAD</option>
+      <option value="aud">A$ AUD</option>
+    </select>
+
     <button class="clear-btn" id="clear-filters">Clear</button>
 
     <div class="view-toggle">
@@ -2026,6 +2048,7 @@ table.bikes tr.m1 td:first-child { border-left: 3px solid var(--text-3); }
 
 <div class="results-bar">
   <span>Showing <strong id="results-count">0</strong> of <span id="total-count">0</span> builds</span>
+  <span class="conversion-note" id="conversion-note" style="display:none">~* = converted at midmarket rate via <a href="https://wise.com/gb/currency-converter/" target="_blank" rel="noopener">Wise</a></span>
 </div>
 
 <main class="section" id="main">
@@ -2059,14 +2082,35 @@ const REGION_TO_CURRENCY = {
   CH: 'eur', RO: 'eur', BG: 'eur', HR: 'eur',
 };
 const DEFAULT_CURRENCY = REGION_TO_CURRENCY[REGION] || 'eur';
-const CURRENCY_SYM = { gbp: '£', eur: '€', usd: '$', aud: 'A$' };
-const CURRENCY_LABEL = { gbp: 'GBP', eur: 'EUR', usd: 'USD', aud: 'AUD' };
-// Order to try when picking a price for a bike: locale first, then sensible fallbacks
+let activeCurrency = DEFAULT_CURRENCY;
+const CURRENCY_SYM = { gbp: '£', eur: '€', usd: '$', cad: 'C$', aud: 'A$' };
+const CURRENCY_LABEL = { gbp: 'GBP', eur: 'EUR', usd: 'USD', cad: 'CAD', aud: 'AUD' };
+
+// Midmarket rates (base: EUR). Updated May 2026 — approximate Wise midmarket rates.
+const EUR_RATES = { eur: 1, gbp: 0.845, usd: 1.08, cad: 1.50, aud: 1.68 };
+function toEur(amount, from) { return amount / EUR_RATES[from]; }
+function fromEur(amountEur, to) { return amountEur * EUR_RATES[to]; }
+function convert(amount, from, to) { return Math.round(fromEur(toEur(amount, from), to)); }
+
+// Pick price for a bike in the active currency.
+// Returns {sym, value, code, converted} where converted=true means midmarket estimate.
+function pickPrice(b) {
+  const cur = activeCurrency;
+  if (b[cur]) return { sym: CURRENCY_SYM[cur], value: b[cur], code: CURRENCY_LABEL[cur], converted: false };
+  const sources = ['gbp', 'eur', 'usd', 'cad', 'aud'];
+  for (const src of sources) {
+    if (b[src]) return { sym: CURRENCY_SYM[cur], value: convert(b[src], src, cur), code: CURRENCY_LABEL[cur], converted: true };
+  }
+  return null;
+}
+
+const WISE_URL = 'https://wise.com/gb/currency-converter/';
 const CURRENCY_FALLBACK = {
-  gbp: ['gbp', 'eur', 'usd', 'aud'],
-  eur: ['eur', 'gbp', 'usd', 'aud'],
-  usd: ['usd', 'eur', 'gbp', 'aud'],
-  aud: ['aud', 'eur', 'gbp', 'usd'],
+  gbp: ['gbp', 'eur', 'usd', 'cad', 'aud'],
+  eur: ['eur', 'gbp', 'usd', 'cad', 'aud'],
+  usd: ['usd', 'eur', 'gbp', 'cad', 'aud'],
+  cad: ['cad', 'usd', 'eur', 'gbp', 'aud'],
+  aud: ['aud', 'eur', 'gbp', 'usd', 'cad'],
 };
 
 // === STATE ===
@@ -2115,14 +2159,6 @@ const fmtWeightShort = (kg) => {
 };
 const safeText = (s) => (s == null) ? '—' : String(s);
 
-// Pick best price for a bike given locale; returns {sym, value, code} or null
-function pickPrice(b) {
-  const order = CURRENCY_FALLBACK[DEFAULT_CURRENCY];
-  for (const cur of order) {
-    if (b[cur]) return { sym: CURRENCY_SYM[cur], value: b[cur], code: CURRENCY_LABEL[cur] };
-  }
-  return null;
-}
 
 function bikeCardClass(b) {
   const isPreorder = (b.notes && b.notes.includes('PRE-ORDER')) ||
@@ -2150,7 +2186,12 @@ function renderStats() {
     { label: 'Total builds', value: ww(STATS.totalBuilds), detail: 'across the lineup' },
     { label: 'Brands', value: ww(STATS.totalBrands), detail: 'global manufacturers' },
     { label: 'Lightest measured', value: ww(STATS.lightestKg, 'kg'), detail: STATS.lightestBike || '' },
-    { label: 'Cheapest GBP', value: STATS.cheapestGBP ? `£${ww(fmtPrice(STATS.cheapestGBP))}` : '—', detail: STATS.cheapestBike || '' },
+    (() => {
+      const cheapest = BIKES.map(b => ({b, p: pickPrice(b)})).filter(x => x.p).sort((a,c) => a.p.value - c.p.value)[0];
+      return cheapest
+        ? { label: `Cheapest (${CURRENCY_LABEL[activeCurrency]})`, value: `${cheapest.p.converted ? '~' : ''}${cheapest.p.sym}${ww(fmtPrice(cheapest.p.value))}`, detail: `${cheapest.b.brand} ${cheapest.b.model}` }
+        : { label: 'Cheapest', value: '—', detail: '' };
+    })(),
     { label: 'Removable battery', value: ww(STATS.removableCount), detail: 'configurations' },
     { label: 'Full 1500W peak', value: ww(STATS.fullPowerCount), detail: 'M2S + FP700 only' },
   ];
@@ -2283,8 +2324,8 @@ function sortLabelFor(key) {
     'peakW-asc': 'peak power (lowest first)',
     'rearTravel-desc': 'rear travel (longest first)',
     'rearTravel-asc': 'rear travel (shortest first)',
-    'price-asc': `price (cheapest first, ${CURRENCY_LABEL[DEFAULT_CURRENCY]})`,
-    'price-desc': `price (priciest first, ${CURRENCY_LABEL[DEFAULT_CURRENCY]})`,
+    'price-asc': `price (cheapest first, ${CURRENCY_LABEL[activeCurrency]})`,
+    'price-desc': `price (priciest first, ${CURRENCY_LABEL[activeCurrency]})`,
   };
   return map[key] || key;
 }
@@ -2322,10 +2363,10 @@ function renderCard(b) {
     ? `<img class="card-art-img" src="${b.directImage}" alt="${b.brand} ${b.model}" loading="lazy"${scaleStyle} onerror="this.classList.add('failed')">`
     : '';
 
-  // Pricing display: locale-aware
+  // Pricing display: currency-aware with conversion indicator
   const pp = pickPrice(b);
   let priceHTML = pp
-    ? `${pp.sym}${fmtPrice(pp.value)} <span class="bike-card-price-currency">${pp.code}</span>`
+    ? `${pp.converted ? '~' : ''}${pp.sym}${fmtPrice(pp.value)} <span class="bike-card-price-currency">${pp.code}</span>${pp.converted ? '<span class="converted-flag" title="Converted at midmarket rate">*</span>' : ''}`
     : `<span class="bike-card-price-na">Price TBA</span>`;
 
   return `
@@ -2379,7 +2420,14 @@ function renderTable(filtered) {
   let data = [...filtered];
   if (sortKey) {
     data.sort((a,b) => {
-      let av = a[sortKey], bv = b[sortKey];
+      let av, bv;
+      if (sortKey === 'price') {
+        const pa = pickPrice(a), pb = pickPrice(b);
+        av = pa ? pa.value : null;
+        bv = pb ? pb.value : null;
+      } else {
+        av = a[sortKey]; bv = b[sortKey];
+      }
       if (av == null) return 1;
       if (bv == null) return -1;
       if (typeof av === 'number') return sortDir === 'asc' ? av - bv : bv - av;
@@ -2399,8 +2447,7 @@ function renderTable(filtered) {
     { k: 'frontTravel', label: 'F mm', n: true },
     { k: 'rearTravel', label: 'R mm', n: true },
     { k: 'weight', label: 'Kg', n: true },
-    { k: 'gbp', label: '£', n: true },
-    { k: 'eur', label: '€', n: true },
+    { k: 'price', label: CURRENCY_SYM[activeCurrency] + ' ' + CURRENCY_LABEL[activeCurrency], n: true },
   ];
   const head = cols.map(c => {
     let cls = '';
@@ -2423,8 +2470,7 @@ function renderTable(filtered) {
       <td class="t-num">${b.frontTravel || '—'}</td>
       <td class="t-num">${b.rearTravel || '—'}</td>
       <td class="t-num">${b.weight || '—'}</td>
-      <td class="t-num">${b.gbp ? fmtPrice(b.gbp) : '—'}</td>
-      <td class="t-num">${b.eur ? fmtPrice(b.eur) : '—'}</td>
+      <td class="t-num">${(() => { const p = pickPrice(b); return p ? (p.converted ? '~' : '') + p.sym + fmtPrice(p.value) : '—'; })()}</td>
     </tr>`;
   }).join('');
   $('#bike-list').innerHTML = `
@@ -2488,20 +2534,12 @@ function openModal(b) {
     gallery = `<div class="modal-hero-gallery" id="modal-hero-gallery">${imgs}</div>${dots}${nav}`;
   }
 
-  // Pick top 2 prices: locale-default first, then a sensible second
-  const allPrices = [
-    {c: 'GBP', sym: '£', v: b.gbp, key: 'gbp'},
-    {c: 'EUR', sym: '€', v: b.eur, key: 'eur'},
-    {c: 'USD', sym: '$', v: b.usd, key: 'usd'},
-    {c: 'CAD', sym: 'C$', v: b.cad, key: 'cad'},
-    {c: 'AUD', sym: 'A$', v: b.aud, key: 'aud'},
-  ].filter(p => p.v);
-  const prices = [...allPrices].sort((a, b2) => {
-    if (a.key === DEFAULT_CURRENCY) return -1;
-    if (b2.key === DEFAULT_CURRENCY) return 1;
-    return 0;
-  });
-  const priceLead = prices[0];
+  // Price in active currency (with conversion)
+  const priceLead = pickPrice(b);
+  // Also show native prices in other currencies the bike actually has
+  const nativePrices = ['gbp','eur','usd','cad','aud']
+    .filter(k => b[k] && k !== activeCurrency)
+    .map(k => ({c: CURRENCY_LABEL[k], sym: CURRENCY_SYM[k], v: b[k], key: k}));
 
   const stats = [
     { label: 'Motor / Peak', value: `${b.motor}${b.peakW ? ' · ' + b.peakW + 'W' : ''}`, valid: !!b.motor },
@@ -2510,8 +2548,8 @@ function openModal(b) {
     { label: 'Peak torque', value: b.peakNm, unit: 'Nm' },
     { label: 'Weight', value: b.weight, unit: 'kg', weight: true },
     { label: 'Frame', value: b.frame, valid: !!b.frame },
-    priceLead ? { label: priceLead.c, value: `${priceLead.sym}${fmtPrice(priceLead.v)}`, valid: true, accent: true } : null,
-    prices[1] ? { label: prices[1].c, value: `${prices[1].sym}${fmtPrice(prices[1].v)}`, valid: true } : null,
+    priceLead ? { label: priceLead.code, value: `${priceLead.converted ? '~' : ''}${priceLead.sym}${fmtPrice(priceLead.value)}${priceLead.converted ? ' <a href="' + WISE_URL + '" target="_blank" rel="noopener" class="converted-link" title="Converted at midmarket rate via Wise">*</a>' : ''}`, valid: true, accent: true } : null,
+    nativePrices[0] ? { label: nativePrices[0].c, value: `${nativePrices[0].sym}${fmtPrice(nativePrices[0].v)}`, valid: true } : null,
   ].filter(s => s && (s.valid !== false) && s.value != null && s.value !== '');
 
   const statsHTML = stats.map(s => {
@@ -2625,6 +2663,8 @@ function render() {
   const filtered = applyFilters();
   $('#results-count').textContent = filtered.length;
   $('#total-count').textContent = BIKES.length;
+  const hasConverted = filtered.some(b => { const p = pickPrice(b); return p && p.converted; });
+  $('#conversion-note').style.display = hasConverted ? '' : 'none';
   if (view === 'cards') renderCards(filtered);
   else renderTable(filtered);
 }
@@ -2651,6 +2691,12 @@ $('#sort-select').addEventListener('change', e => {
   render();
 });
 
+$('#currency-select').value = activeCurrency;
+$('#currency-select').addEventListener('change', e => {
+  activeCurrency = e.target.value;
+  render();
+});
+
 $('#clear-filters').addEventListener('click', () => {
   Object.keys(filters).forEach(k => filters[k] = k === 'search' ? '' : 'all');
   $$('.chip[data-filter]').forEach(c => {
@@ -2660,6 +2706,8 @@ $('#clear-filters').addEventListener('click', () => {
   $('#search-input').value = '';
   $('#sort-select').value = 'weight-asc';
   cardSortKey = 'weight-asc';
+  activeCurrency = DEFAULT_CURRENCY;
+  $('#currency-select').value = activeCurrency;
   render();
 });
 

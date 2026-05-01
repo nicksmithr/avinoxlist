@@ -66,6 +66,7 @@ IG = {
     "Olympia": "https://www.instagram.com/olympiacicli/",
     "Orange": "https://www.instagram.com/orangebikes/",
     "Pivot": "https://www.instagram.com/pivotcycles/",
+    "Propain": "https://www.instagram.com/propainbicycles/",
     "Raymon": "https://www.instagram.com/r__raymon/",
     "Rotwild": "https://www.instagram.com/rotwildbikes/",
     "Steppenwolf": "https://www.instagram.com/steppenwolfbikes/",
@@ -863,6 +864,35 @@ bikes.append([
     pv_url, IG["Pivot"],
     "Top spec. Reverb V2 sacrifices ~15mm drop vs OneUp.",
     pv_url
+])
+
+# ===== PROPAIN =====
+pp_url = "https://www.propain-bikes.com/en/products/bikes/ekano-3-al"
+bikes.append([
+    "Propain", "Ekano 3 AL", "Trail (from)", "Germany/EU/US", "NEW",
+    "M2", 1100, 125, 600, "Avinox 600Wh integrated", "No",
+    160, 150, "Aluminium", "29\"",
+    25.5, "~25.5kg estimate (size L, 800Wh config)",
+    "Configurable", "Configurable",
+    "Configurable", "Configurable",
+    "Configurable", "Configurable",
+    None, 4999, 5599, None, None,
+    pp_url, IG["Propain"],
+    "Fully configurable DTC. Trail geometry 160/150mm. Price is base config; 800Wh and M2S upgrades available.",
+    pp_url
+])
+bikes.append([
+    "Propain", "Ekano 3 AL", "Enduro (from)", "Germany/EU/US", "NEW",
+    "M2", 1100, 125, 600, "Avinox 600Wh integrated", "No",
+    170, 160, "Aluminium", "Mullet",
+    25.5, "~25.5kg estimate (size L, 800Wh config)",
+    "Configurable", "Configurable",
+    "Configurable", "Configurable",
+    "Configurable", "Configurable",
+    None, 5199, 5799, None, None,
+    pp_url, IG["Propain"],
+    "Fully configurable DTC. Enduro geometry 170/160mm. Price is base config; 800Wh and M2S upgrades available.",
+    pp_url
 ])
 
 # ===== RAYMON =====
