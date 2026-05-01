@@ -2092,6 +2092,12 @@ table.bikes tr.m1 td:first-child { border-left: 3px solid var(--text-3); }
       <option value="aud">A$ AUD</option>
     </select>
 
+    <span class="filter-label" style="margin-left:8px;">Weight</span>
+    <select class="chip" id="weight-unit-select">
+      <option value="kg">kg</option>
+      <option value="lb">lb</option>
+    </select>
+
     <button class="clear-btn" id="clear-filters">Clear</button>
 
     <div class="view-toggle">
@@ -2138,6 +2144,7 @@ const REGION_TO_CURRENCY = {
 };
 const DEFAULT_CURRENCY = REGION_TO_CURRENCY[REGION] || 'eur';
 let activeCurrency = DEFAULT_CURRENCY;
+let weightUnit = 'kg';
 const CURRENCY_SYM = { gbp: '£', eur: '€', usd: '$', cad: 'C$', aud: 'A$' };
 const CURRENCY_LABEL = { gbp: 'GBP', eur: 'EUR', usd: 'USD', cad: 'CAD', aud: 'AUD' };
 
@@ -2204,13 +2211,19 @@ const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 const fmtPrice = (n) => n ? n.toLocaleString(LOCALE) : '—';
 const fmtWeight = (kg) => {
   if (!kg) return '—';
-  const lb = (kg * 2.20462).toFixed(1);
-  return `${kg.toFixed(1)} kg <span class="weight-lb">/ ${lb} lb</span>`;
+  if (weightUnit === 'lb') {
+    const lb = (kg * 2.20462).toFixed(1);
+    return `${lb} lb`;
+  }
+  return `${kg.toFixed(1)} kg`;
 };
 const fmtWeightShort = (kg) => {
   if (!kg) return '—';
-  const lb = Math.round(kg * 2.20462 * 10) / 10;
-  return `${kg.toFixed(1)}kg · ${lb}lb`;
+  if (weightUnit === 'lb') {
+    const lb = (kg * 2.20462).toFixed(1);
+    return `${lb}lb`;
+  }
+  return `${kg.toFixed(1)}kg`;
 };
 const safeText = (s) => (s == null) ? '—' : String(s);
 
@@ -2240,7 +2253,7 @@ function renderStats() {
   const items = [
     { label: 'Total builds', value: ww(STATS.totalBuilds), detail: 'across the lineup' },
     { label: 'Brands', value: ww(STATS.totalBrands), detail: 'global manufacturers' },
-    { label: 'Lightest measured', value: ww(STATS.lightestKg, 'kg'), detail: STATS.lightestBike || '' },
+    { label: 'Lightest measured', value: STATS.lightestKg ? fmtWeightShort(STATS.lightestKg) : '—', detail: STATS.lightestBike || '' },
     (() => {
       const cheapest = BIKES.map(b => ({b, p: pickPrice(b)})).filter(x => x.p).sort((a,c) => a.p.value - c.p.value)[0];
       return cheapest
@@ -2289,7 +2302,7 @@ function pickStandouts() {
   const picks = [];
   // Lightest
   const byWeight = BIKES.filter(b => b.weight).sort((a,b) => a.weight - b.weight);
-  if (byWeight[0]) picks.push({...byWeight[0], _tag: 'Lightest measured', _stat: byWeight[0].weight, _unit: 'kg'});
+  if (byWeight[0]) picks.push({...byWeight[0], _tag: 'Lightest measured', _stat: fmtWeightShort(byWeight[0].weight), _unit: ''});
   // Cheapest M2S
   const cheapM2S = BIKES.filter(b => b.motor === 'M2S' && b.gbp).sort((a,b) => a.gbp - b.gbp);
   if (cheapM2S[0]) picks.push({...cheapM2S[0], _tag: 'Cheapest M2S (£)', _stat: '£' + cheapM2S[0].gbp.toLocaleString(), _unit: ''});
@@ -2501,7 +2514,7 @@ function renderTable(filtered) {
     { k: 'removable', label: 'Removable' },
     { k: 'frontTravel', label: 'F mm', n: true },
     { k: 'rearTravel', label: 'R mm', n: true },
-    { k: 'weight', label: 'Kg', n: true },
+    { k: 'weight', label: weightUnit === 'lb' ? 'Lb' : 'Kg', n: true },
     { k: 'price', label: CURRENCY_SYM[activeCurrency] + ' ' + CURRENCY_LABEL[activeCurrency], n: true },
   ];
   const head = cols.map(c => {
@@ -2524,7 +2537,7 @@ function renderTable(filtered) {
       <td>${b.removable || '—'}</td>
       <td class="t-num">${b.frontTravel || '—'}</td>
       <td class="t-num">${b.rearTravel || '—'}</td>
-      <td class="t-num">${b.weight || '—'}</td>
+      <td class="t-num">${b.weight ? (weightUnit === 'lb' ? (b.weight * 2.20462).toFixed(1) : b.weight) : '—'}</td>
       <td class="t-num">${(() => { const p = pickPrice(b); return p ? (p.converted ? '~' : '') + p.sym + fmtPrice(p.value) : '—'; })()}</td>
     </tr>`;
   }).join('');
@@ -2752,6 +2765,11 @@ $('#currency-select').addEventListener('change', e => {
   render();
 });
 
+$('#weight-unit-select').addEventListener('change', e => {
+  weightUnit = e.target.value;
+  render();
+});
+
 $('#clear-filters').addEventListener('click', () => {
   Object.keys(filters).forEach(k => filters[k] = k === 'search' ? '' : 'all');
   $$('.chip[data-filter]').forEach(c => {
@@ -2763,6 +2781,8 @@ $('#clear-filters').addEventListener('click', () => {
   cardSortKey = 'weight-asc';
   activeCurrency = DEFAULT_CURRENCY;
   $('#currency-select').value = activeCurrency;
+  weightUnit = 'kg';
+  $('#weight-unit-select').value = 'kg';
   render();
 });
 
