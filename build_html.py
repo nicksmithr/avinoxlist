@@ -198,52 +198,94 @@ WEIGHT_OVERRIDES = {
     ("Raymon", "Tarok", "Ultra"): (22.0, "raymon-bicycles.com"),
 }
 
-# Price overrides — confirmed from official manufacturer spec sheets
+# Price overrides — confirmed from official manufacturer websites
+# Sources documented per entry for transparency
 PRICE_OVERRIDES = {
-    # Steppenwolf Tundra
+    # Steppenwolf Tundra — steppenwolf-bicycles.com/en
     ("Steppenwolf", "Tundra", "9.0 (entry M2S)"): {"eur": 5199},
     ("Steppenwolf", "Tundra", "10.0"): {"eur": 7999},
     ("Steppenwolf", "Tundra", "11.0 (top)"): {"eur": 9999},
-    # BH iLynx+ DL — GBP from bhbikes.com (en_GB)
+    # BH iLynx+ DL — bhbikes.com/en_EN (GBP)
     ("BH", "iLynx+ DL", "Enduro 9.0 (Alloy entry)"): {"gbp": 4900},
     ("BH", "iLynx+ DL", "Enduro 9.1 (Alloy)"): {"gbp": 5500},
     ("BH", "iLynx+ DL", "Carbon 9.5"): {"gbp": 5500},
     ("BH", "iLynx+ DL", "Carbon 9.6"): {"gbp": 6400},
     ("BH", "iLynx+ DL", "Carbon 9.7"): {"gbp": 7300},
     ("BH", "iLynx+ DL", "Carbon 9.8 (Top)"): {"gbp": 8200},
-    # Megamo Reason — verified EUR prices from megamo.com 2027 spec sheets
+    # Megamo Reason — megamo.com + UK dealers
+    ("Megamo", "Reason", "AL 07 (entry alloy)"): {"eur": 4999, "gbp": 4999},
     ("Megamo", "Reason", "AL 05"): {"eur": 5999},
     ("Megamo", "Reason", "AL 03"): {"eur": 6999},
     ("Megamo", "Reason", "AL 03 AXS"): {"eur": 7499},
-    ("Megamo", "Reason", "CRB 05"): {"eur": 7099},
+    ("Megamo", "Reason", "CRB 07 (entry carbon)"): {"eur": 5499},
+    ("Megamo", "Reason", "CRB 05"): {"eur": 7099, "gbp": 6099},
+    ("Megamo", "Reason", "CRB 03"): {"eur": 7999},
+    ("Megamo", "Reason", "CRB 03 AXS"): {"eur": 8499, "gbp": 8499},
     ("Megamo", "Reason", "CRB 02"): {"eur": 8999},
     ("Megamo", "Reason", "CRB 01 (top)"): {"eur": 10999},
-    # Mondraker Zendit — verified from mondraker.com /uk/en/
+    # Mondraker Zendit — mondraker.com /uk/en/
     ("Mondraker", "Zendit", "RR (entry)"): {"gbp": 7399},
     ("Mondraker", "Zendit", "RR S (top)"): {"gbp": 9299},
-    # Forbidden Druid E — user-supplied CAD pricing per Pinkbike
+    # Forbidden Druid E — CAD via Pinkbike / dealer pricing
     ("Forbidden", "Druid E", "Tier 1 Vitalogy (600Wh)"): {"cad": 16199},
     ("Forbidden", "Druid E", "Tier 1 Vitalogy (800Wh)"): {"cad": 16499},
     ("Forbidden", "Druid E", "Tier 2 Purple Haze (600Wh)"): {"cad": 13199},
     ("Forbidden", "Druid E", "Tier 2 Purple Haze (800Wh)"): {"cad": 13499},
-    # Pivot Shuttle AMP'd — GBP from biketart.com (UK Pivot distributor)
-    ("Pivot", "Shuttle AMP'd", "Team XX Eagle Transmission"): {"gbp": 13499},
-    ("Pivot", "Shuttle AMP'd", "Pro X0 Eagle Transmission"): {"gbp": 11999},
-    # Raymon Tarok — verified from raymon-bicycles.com (after rename in loop)
+    # Pivot Shuttle AMP'd — pivotcycles.com (USD) + biketart.com (GBP)
+    ("Pivot", "Shuttle AMP'd", "Ride GX Eagle Transmission"): {"gbp": 8499, "usd": 9499},
+    ("Pivot", "Shuttle AMP'd", "Pro X0 Eagle Transmission"): {"gbp": 11999, "usd": 11999},
+    ("Pivot", "Shuttle AMP'd", "Team XX Eagle Transmission"): {"gbp": 13499, "usd": 14499},
+    # Raymon Tarok — raymon-bicycles.com
     ("Raymon", "Tarok", "Pro"): {"eur": 5999},
     ("Raymon", "Tarok", "Ultra"): {"eur": 7499},
-    # Commencal Meta Power SX — GBP from UK retailers (inc. VAT)
-    ("Commencal", "Meta Power SX Avinox", "Origin (entry)"): {"gbp": 6600},
-    ("Commencal", "Meta Power SX Avinox", "Race (top, est.)"): {"gbp": 9100},
-    # Forestal e-Siryon V2 — GBP from Silverfish UK distributor
-    ("Forestal", "e-Siryon V2", "Halō"): {"gbp": 8499},
-    ("Forestal", "e-Siryon V2", "Diōde (top)"): {"gbp": 12999},
-    # Pivot Shuttle AMP'd Ride — GBP from biketart.com
-    ("Pivot", "Shuttle AMP'd", "Ride GX Eagle Transmission"): {"gbp": 8499},
-    # Megamo Reason — GBP from UK dealers
-    ("Megamo", "Reason", "AL 07 (entry alloy)"): {"gbp": 4999},
-    ("Megamo", "Reason", "CRB 05"): {"eur": 7099, "gbp": 6099},
-    ("Megamo", "Reason", "CRB 03 AXS"): {"eur": 8499, "gbp": 8499},
+    # Commencal Meta Power SX — commencal.com US ($) + UK retailers (£)
+    ("Commencal", "Meta Power SX Avinox", "Origin (entry)"): {"gbp": 6600, "usd": 8800},
+    ("Commencal", "Meta Power SX Avinox", "Race (top, est.)"): {"gbp": 9100, "usd": 12000},
+    # Forestal e-Siryon V2 — forestal.com (EUR) + Silverfish UK (GBP)
+    ("Forestal", "e-Siryon V2", "Halō"): {"eur": 7500, "gbp": 8499},
+    ("Forestal", "e-Siryon V2", "Diōde (top)"): {"eur": 9600, "gbp": 12999},
+    # YT Decoy X — yt-industries.com (US + DE stores)
+    ("YT", "Decoy X", "Launch Edition"): {"eur": 8999, "usd": 8999},
+    # Atherton S.170E — athertonbikes.com
+    ("Atherton", "S.170E", "Build 1 (top)"): {"gbp": 8999},
+    # Rotwild R.EXC — rotwild.com/en
+    ("Rotwild", "R.EXC", "Pro (M2S)"): {"eur": 10990},
+    ("Rotwild", "R.EXC", "Ultra (M2S)"): {"eur": 14990},
+    # Unno Mith — unno.com/en-es
+    ("Unno", "Mith", "(updated M2S)"): {"eur": 9995},
+    # Propain Ekano 3 AL — propain-bikes.com (GBP from UK product pages)
+    ("Propain", "Ekano 3 AL", "Trail (from)"): {"gbp": 4999},
+    ("Propain", "Ekano 3 AL", "Enduro (from)"): {"gbp": 5199},
+    # Lee Cougan Flö — leecougan.com
+    ("Lee Cougan", "Flö", "Carbon Pro"): {"eur": 6899},
+    # MMR Lyth — mmrbikes.com/pages/new-mmr-lyth-avinox
+    ("MMR", "Lyth", "(single build at launch)"): {"eur": 6199},
+    # Teewing — teewingbikes.com (EUR only, Shopify)
+    ("Teewing", "Flux One", "Pro"): {"eur": 8999},
+    ("Teewing", "Flux One", "A (entry)"): {"eur": 6899},
+    ("Teewing", "Turbo Force", "Pro"): {"eur": 8999},
+    ("Teewing", "Turbo Force", "XT (entry)"): {"eur": 5899},
+}
+
+# Price source URLs — shown on detail pages for transparency
+PRICE_SOURCES = {
+    "Pivot": "https://www.pivotcycles.com/en/e-bikes",
+    "Commencal": "https://www.commencal.com/us/en/ebike",
+    "YT": "https://www.yt-industries.com",
+    "Atherton": "https://www.athertonbikes.com/bike/emtb.html",
+    "Rotwild": "https://rotwild.com/en/r-exc",
+    "Unno": "https://www.unno.com/en-es/mith/race",
+    "Propain": "https://www.propain-bikes.com/en/product/bikes/trail/ekano-al-trail/",
+    "Forestal": "https://www.forestal.com/en/products/siryon-v2",
+    "MMR": "https://mmrbikes.com/pages/new-mmr-lyth-avinox",
+    "Teewing": "https://teewingbikes.com/collections/electric-bikes",
+    "BH": "https://www.bhbikes.com/en_EN/ilynx-dl/ebikes",
+    "Steppenwolf": "https://www.steppenwolf-bicycles.com/en/tundra-fully-mtb/",
+    "Lee Cougan": "https://leecougan.com/en/bikes/e-bikes/flo",
+    "Megamo": "https://www.megamo.com",
+    "Mondraker": "https://mondraker.com/uk/en/",
+    "Forbidden": "https://www.forbiddenbike.com/bikes/druid-e",
+    "Raymon": "https://raymon-bikes.com",
 }
 
 for b in bikes:
@@ -730,6 +772,7 @@ for rec in bikes_data:
     rec["source"] = _normalize_external_url(rec.get("source"))
     rec["photo"] = _to_r2_image_url(_normalize_external_url(rec.get("photo")))
     rec["instagram"] = _normalize_external_url(rec.get("instagram"))
+    rec["priceSource"] = PRICE_SOURCES.get(rec["brand"])
     k = (rec["brand"], rec["model"], rec["build"])
     if k in DIRECT_IMAGES:
         rec["images"] = [_to_r2_image_url(url) for url in DIRECT_IMAGES[k]]
@@ -2599,7 +2642,7 @@ function openModal(b) {
 
   const links = [];
   if (b.source) links.push({url: b.source, label: 'Manufacturer page'});
-  if (b.photo && b.photo.startsWith('http')) links.push({url: b.photo, label: 'Photo / spec page'});
+  if (b.priceSource) links.push({url: b.priceSource, label: 'Price source'});
   if (b.instagram && b.instagram.startsWith('http')) links.push({url: b.instagram, label: 'Instagram'});
   const linksHTML = links.map(l => `
     <a class="modal-link" href="${l.url}" target="_blank" rel="noopener">
