@@ -232,6 +232,18 @@ PRICE_OVERRIDES = {
     # Raymon Tarok — verified from raymon-bicycles.com (after rename in loop)
     ("Raymon", "Tarok", "Pro"): {"eur": 5999},
     ("Raymon", "Tarok", "Ultra"): {"eur": 7499},
+    # Commencal Meta Power SX — GBP from UK retailers (inc. VAT)
+    ("Commencal", "Meta Power SX Avinox", "Origin (entry)"): {"gbp": 6600},
+    ("Commencal", "Meta Power SX Avinox", "Race (top, est.)"): {"gbp": 9100},
+    # Forestal e-Siryon V2 — GBP from Silverfish UK distributor
+    ("Forestal", "e-Siryon V2", "Halō"): {"gbp": 8499},
+    ("Forestal", "e-Siryon V2", "Diōde (top)"): {"gbp": 12999},
+    # Pivot Shuttle AMP'd Ride — GBP from biketart.com
+    ("Pivot", "Shuttle AMP'd", "Ride GX Eagle Transmission"): {"gbp": 8499},
+    # Megamo Reason — GBP from UK dealers
+    ("Megamo", "Reason", "AL 07 (entry alloy)"): {"gbp": 4999},
+    ("Megamo", "Reason", "CRB 05"): {"eur": 7099, "gbp": 6099},
+    ("Megamo", "Reason", "CRB 03 AXS"): {"eur": 8499, "gbp": 8499},
 }
 
 for b in bikes:
