@@ -1,0 +1,52 @@
+---
+import Base from '../layouts/Base.astro';
+import BikeGrid from '../components/BikeGrid';
+import { getAllBikes } from '../lib/db';
+import { env } from 'cloudflare:workers';
+
+const bikes = await getAllBikes(env.DB);
+
+const totalBrands = new Set(bikes.map(b => b.brand)).size;
+---
+<Base title="Avinox List — Every Avinox e-MTB Build (2026)">
+  <header class="px-8 pt-10 pb-6 max-w-7xl mx-auto">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="h-px flex-1 bg-[var(--color-border)]" />
+      <p class="text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-3)] font-medium">Live Index — 2026</p>
+      <div class="h-px flex-1 bg-[var(--color-border)]" />
+    </div>
+    <h1 class="text-5xl md:text-7xl font-black tracking-tight">
+      Avinox<span class="text-[var(--color-accent)]">/list</span>
+    </h1>
+    <p class="mt-4 text-[var(--color-text-2)] max-w-lg text-[15px] leading-relaxed">
+      Every M2S and M2 e-MTB build — shipping or in pre-order.
+      Deep specs, live filters, real prices.
+    </p>
+    <div class="mt-3 flex items-center gap-4">
+      <span class="text-xs text-[var(--color-text-3)]">
+        <strong class="text-[var(--color-text)] font-semibold">{bikes.length}</strong> builds
+      </span>
+      <span class="w-1 h-1 rounded-full bg-[var(--color-border)]" />
+      <span class="text-xs text-[var(--color-text-3)]">
+        <strong class="text-[var(--color-text)] font-semibold">{totalBrands}</strong> brands
+      </span>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-8 pb-16">
+    <BikeGrid client:load bikes={bikes} />
+  </main>
+
+  <footer class="border-t border-[var(--color-border)] py-8 px-8 max-w-7xl mx-auto">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <p class="text-xs text-[var(--color-text-3)] leading-relaxed max-w-lg">
+        Independently compiled from manufacturer pages, press releases and review-site measurements.
+        Pricing in pre-order may shift.
+      </p>
+      <a href="https://wise.com/gb/currency-converter/" target="_blank" rel="noopener"
+        class="text-xs text-[var(--color-text-3)] hover:text-[var(--color-accent)] transition-colors whitespace-nowrap">
+        Verify prices before purchase ↗
+      </a>
+    </div>
+  </footer>
+</Base>

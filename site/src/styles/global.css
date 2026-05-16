@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #FAFAFA;
+  --color-bg-card: #FFFFFF;
+  --color-text: #1A1D1F;
+  --color-text-2: #6F767E;
+  --color-text-3: #9A9FA5;
+  --color-accent: #E6002A;
+  --color-accent-soft: #FFF0F2;
+  --color-border: #EFEFEF;
+  --color-surface: #F4F4F4;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+html {
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: white;
+}
+
+img.bike-img {
+  mix-blend-mode: multiply;
+}

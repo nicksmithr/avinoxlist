@@ -1,0 +1,274 @@
+---
+import Base from '../../layouts/Base.astro';
+import BikeCompare from '../../components/BikeCompare';
+import { getAllBikeOptions, getBikePairBySlugs } from '../../lib/db';
+import { getComponentValues, type ComponentBreakdown } from '../../lib/component-value';
+import { env } from 'cloudflare:workers';
+import type { BikeWithRelations } from '../../lib/types';
+
+const rawPath = Astro.params.slugs ?? '';
+const allBikes = await getAllBikeOptions(env.DB);
+
+let bike1: BikeWithRelations | null = null;
+let bike2: BikeWithRelations | null = null;
+let slug1 = '';
+let slug2 = '';
+
+if (rawPath && rawPath.includes('-vs-')) {
+  const idx = rawPath.indexOf('-vs-');
+  slug1 = rawPath.slice(0, idx);
+  slug2 = rawPath.slice(idx + 4);
+
+  // Canonical ordering: alphabetical. Redirect if reversed.
+  if (slug1 > slug2) {
+    return Astro.redirect(`/compare/${slug2}-vs-${slug1}`, 301);
+  }
+
+  [bike1, bike2] = await getBikePairBySlugs(env.DB, slug1, slug2);
+
+  if (!bike1 || !bike2) {
+    return Astro.redirect('/compare/');
+  }
+}
+
+function bikeLabel(b: BikeWithRelations): string {
+  return `${b.brand} ${b.model} ${b.build}`;
+}
+
+function getPrice(b: BikeWithRelations, cur: string): number | null {
+  const p = b.prices.find(p => p.currency === cur);
+  return p ? p.amount : null;
+}
+
+const hasBikes = bike1 && bike2;
+
+let title = 'Compare Avinox e-MTBs — Side by Side';
+let description = 'Compare any two Avinox e-MTB builds side by side. Specs, prices, and component value breakdown.';
+
+if (hasBikes) {
+  const l1 = bikeLabel(bike1!);
+  const l2 = bikeLabel(bike2!);
+  title = `${l1} vs ${l2} — Avinox List Compare`;
+  description = `Side-by-side comparison of ${l1} and ${l2}. Motor, suspension, drivetrain, brakes, weight, prices, and component value analysis.`;
+}
+
+const cv1 = bike1 ? getComponentValues(bike1, 'gbp') : null;
+const cv2 = bike2 ? getComponentValues(bike2, 'gbp') : null;
+
+const currencySymbols: Record<string, string> = { gbp: '£', eur: '€', usd: '$', cad: 'C$', aud: 'A$' };
+const currencyOrder = ['gbp', 'eur', 'usd', 'cad', 'aud'];
+
+const jsonLd = hasBikes ? {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: title,
+  description,
+  url: `https://avinoxlist.com/compare/${slug1}-vs-${slug2}`,
+  about: [
+    { '@type': 'Product', name: bikeLabel(bike1!), url: `https://avinoxlist.com/bikes/${slug1}` },
+    { '@type': 'Product', name: bikeLabel(bike2!), url: `https://avinoxlist.com/bikes/${slug2}` },
+  ],
+} : null;
+
+interface SpecRow {
+  label: string;
+  v1: string | null;
+  v2: string | null;
+  highlight?: 'lower' | 'higher';
+}
+
+const specs: SpecRow[] = hasBikes ? [
+  { label: 'Motor', v1: bike1!.motor, v2: bike2!.motor },
+  { label: 'Peak Power', v1: bike1!.peak_w ? `${bike1!.peak_w}W` : null, v2: bike2!.peak_w ? `${bike2!.peak_w}W` : null, highlight: 'higher' },
+  { label: 'Peak Torque', v1: bike1!.peak_nm ? `${bike1!.peak_nm}Nm` : null, v2: bike2!.peak_nm ? `${bike2!.peak_nm}Nm` : null, highlight: 'higher' },
+  { label: 'Battery', v1: bike1!.battery_wh ? `${bike1!.battery_wh}Wh` : null, v2: bike2!.battery_wh ? `${bike2!.battery_wh}Wh` : null, highlight: 'higher' },
+  { label: 'Removable', v1: bike1!.removable, v2: bike2!.removable },
+  { label: 'Front Travel', v1: bike1!.front_travel_mm ? `${bike1!.front_travel_mm}mm` : null, v2: bike2!.front_travel_mm ? `${bike2!.front_travel_mm}mm` : null, highlight: 'higher' },
+  { label: 'Rear Travel', v1: bike1!.rear_travel_mm ? `${bike1!.rear_travel_mm}mm` : null, v2: bike2!.rear_travel_mm ? `${bike2!.rear_travel_mm}mm` : null, highlight: 'higher' },
+  { label: 'Frame', v1: bike1!.frame, v2: bike2!.frame },
+  { label: 'Wheels', v1: bike1!.wheels, v2: bike2!.wheels },
+  { label: 'Weight', v1: bike1!.weight_kg ? `${bike1!.weight_kg}kg` : null, v2: bike2!.weight_kg ? `${bike2!.weight_kg}kg` : null, highlight: 'lower' },
+] : [];
+
+const componentSpecs: { label: string; v1: string | null; v2: string | null; cv1: number | null; cv2: number | null }[] = hasBikes ? [
+  { label: 'Fork', v1: bike1!.fork, v2: bike2!.fork, cv1: cv1!.fork, cv2: cv2!.fork },
+  { label: 'Rear Shock', v1: bike1!.shock, v2: bike2!.shock, cv1: cv1!.shock, cv2: cv2!.shock },
+  { label: 'Drivetrain', v1: bike1!.drivetrain, v2: bike2!.drivetrain, cv1: cv1!.drivetrain, cv2: cv2!.drivetrain },
+  { label: 'Brakes', v1: bike1!.brakes, v2: bike2!.brakes, cv1: cv1!.brakes, cv2: cv2!.brakes },
+  { label: 'Wheelset', v1: bike1!.wheelset, v2: bike2!.wheelset, cv1: cv1!.wheelset, cv2: cv2!.wheelset },
+  { label: 'Dropper', v1: bike1!.dropper, v2: bike2!.dropper, cv1: cv1!.dropper, cv2: cv2!.dropper },
+] : [];
+
+const img1 = bike1?.images.find(i => i.is_primary)?.url || bike1?.images[0]?.url;
+const img2 = bike2?.images.find(i => i.is_primary)?.url || bike2?.images[0]?.url;
+
+function numVal(s: string | null): number | null {
+  if (!s) return null;
+  const m = s.match(/[\d.]+/);
+  return m ? parseFloat(m[0]) : null;
+}
+
+function betterClass(v1: string | null, v2: string | null, mode: 'lower' | 'higher' | undefined, side: 1 | 2): string {
+  if (!mode || !v1 || !v2) return '';
+  const n1 = numVal(v1);
+  const n2 = numVal(v2);
+  if (n1 === null || n2 === null || n1 === n2) return '';
+  const better1 = mode === 'lower' ? n1 < n2 : n1 > n2;
+  if (side === 1 && better1) return 'text-green-700 font-semibold';
+  if (side === 2 && !better1) return 'text-green-700 font-semibold';
+  return '';
+}
+---
+<Base title={title} description={description} canonical={hasBikes ? `https://avinoxlist.com/compare/${slug1}-vs-${slug2}` : 'https://avinoxlist.com/compare/'}>
+  {jsonLd && (
+    <Fragment slot="head">
+      <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    </Fragment>
+  )}
+
+  <div class="max-w-6xl mx-auto px-6 py-8">
+    <a href="/" class="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-3)] hover:text-[var(--color-text)] transition-colors group">
+      <svg class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
+      </svg>
+      Back to all bikes
+    </a>
+
+    <h1 class="text-3xl font-black mt-6 tracking-tight">
+      Compare<span class="text-[var(--color-accent)]">/</span>bikes
+    </h1>
+    <p class="text-sm text-[var(--color-text-2)] mt-1">Side-by-side specs and component value breakdown</p>
+
+    <!-- Bike Selectors -->
+    <BikeCompare
+      client:load
+      allBikes={allBikes}
+      initialSlug1={slug1}
+      initialSlug2={slug2}
+    />
+
+    {hasBikes && (
+      <div class="mt-8">
+        <!-- Bike Images -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <a href={`/bikes/${slug1}`} class="block bg-[var(--color-surface)] rounded-2xl overflow-hidden aspect-[4/3] flex items-center justify-center p-6 hover:ring-2 hover:ring-[var(--color-accent)] transition-all">
+            {img1 && <img src={img1} alt={bikeLabel(bike1!)} class="bike-img max-w-full max-h-full object-contain" />}
+          </a>
+          <a href={`/bikes/${slug2}`} class="block bg-[var(--color-surface)] rounded-2xl overflow-hidden aspect-[4/3] flex items-center justify-center p-6 hover:ring-2 hover:ring-[var(--color-accent)] transition-all">
+            {img2 && <img src={img2} alt={bikeLabel(bike2!)} class="bike-img max-w-full max-h-full object-contain" />}
+          </a>
+        </div>
+
+        <!-- Prices -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div>
+            <div class="flex flex-wrap gap-2">
+              {currencyOrder.map(cur => {
+                const amt = getPrice(bike1!, cur);
+                return amt ? (
+                  <div class="bg-[var(--color-surface)] rounded-xl px-3 py-2">
+                    <span class="text-lg font-bold">{currencySymbols[cur]}{amt.toLocaleString()}</span>
+                    <span class="text-[10px] text-[var(--color-text-3)] ml-1 uppercase">{cur}</span>
+                  </div>
+                ) : null;
+              })}
+            </div>
+          </div>
+          <div>
+            <div class="flex flex-wrap gap-2">
+              {currencyOrder.map(cur => {
+                const amt = getPrice(bike2!, cur);
+                return amt ? (
+                  <div class="bg-[var(--color-surface)] rounded-xl px-3 py-2">
+                    <span class="text-lg font-bold">{currencySymbols[cur]}{amt.toLocaleString()}</span>
+                    <span class="text-[10px] text-[var(--color-text-3)] ml-1 uppercase">{cur}</span>
+                  </div>
+                ) : null;
+              })}
+            </div>
+          </div>
+        </div>
+
+        <!-- Spec Comparison Table -->
+        <section>
+          <h2 class="text-lg font-bold mb-4 flex items-center gap-3">
+            Key Specs
+            <div class="h-px flex-1 bg-[var(--color-border)]" />
+          </h2>
+          <div class="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border)] overflow-hidden">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-[var(--color-border)]">
+                  <th class="text-left px-4 py-3 font-medium text-[var(--color-text-3)] text-xs uppercase tracking-wider w-1/5">Spec</th>
+                  <th class="text-left px-4 py-3 font-semibold text-xs w-2/5">
+                    <a href={`/bikes/${slug1}`} class="hover:text-[var(--color-accent)]">{bikeLabel(bike1!)}</a>
+                  </th>
+                  <th class="text-left px-4 py-3 font-semibold text-xs w-2/5">
+                    <a href={`/bikes/${slug2}`} class="hover:text-[var(--color-accent)]">{bikeLabel(bike2!)}</a>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {specs.map((s, i) => (
+                  <tr class={`${i % 2 === 0 ? 'bg-[var(--color-surface)]/40' : ''} border-b border-[var(--color-border)]/50`}>
+                    <td class="px-4 py-3 font-medium text-[var(--color-text-3)] text-xs uppercase tracking-wider">{s.label}</td>
+                    <td class={`px-4 py-3 ${betterClass(s.v1, s.v2, s.highlight, 1)}`}>{s.v1 || '—'}</td>
+                    <td class={`px-4 py-3 ${betterClass(s.v1, s.v2, s.highlight, 2)}`}>{s.v2 || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Component Value Table -->
+        <section class="mt-10">
+          <h2 class="text-lg font-bold mb-4 flex items-center gap-3">
+            Components &amp; Estimated Value
+            <div class="h-px flex-1 bg-[var(--color-border)]" />
+          </h2>
+          <div class="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border)] overflow-hidden">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-[var(--color-border)]">
+                  <th class="text-left px-4 py-3 font-medium text-[var(--color-text-3)] text-xs uppercase tracking-wider w-1/6">Component</th>
+                  <th class="text-left px-4 py-3 font-semibold text-xs w-1/3">{bikeLabel(bike1!)}</th>
+                  <th class="text-left px-4 py-3 font-semibold text-xs w-1/6 text-right">Est.</th>
+                  <th class="text-left px-4 py-3 font-semibold text-xs w-1/3">{bikeLabel(bike2!)}</th>
+                  <th class="text-left px-4 py-3 font-semibold text-xs w-1/6 text-right">Est.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {componentSpecs.map((s, i) => (
+                  <tr class={`${i % 2 === 0 ? 'bg-[var(--color-surface)]/40' : ''} border-b border-[var(--color-border)]/50`}>
+                    <td class="px-4 py-3 font-medium text-[var(--color-text-3)] text-xs uppercase tracking-wider">{s.label}</td>
+                    <td class="px-4 py-3 text-xs leading-relaxed">{s.v1 || '—'}</td>
+                    <td class="px-4 py-3 text-right text-xs text-[var(--color-text-2)]">{s.cv1 ? `£${s.cv1.toLocaleString()}` : '—'}</td>
+                    <td class="px-4 py-3 text-xs leading-relaxed">{s.v2 || '—'}</td>
+                    <td class="px-4 py-3 text-right text-xs text-[var(--color-text-2)]">{s.cv2 ? `£${s.cv2.toLocaleString()}` : '—'}</td>
+                  </tr>
+                ))}
+                <tr class="border-t-2 border-[var(--color-border)] font-bold">
+                  <td class="px-4 py-4 text-xs uppercase tracking-wider">Total CV</td>
+                  <td class="px-4 py-4"></td>
+                  <td class="px-4 py-4 text-right text-sm">£{cv1!.total.toLocaleString()}</td>
+                  <td class="px-4 py-4"></td>
+                  <td class="px-4 py-4 text-right text-sm">£{cv2!.total.toLocaleString()}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="mt-3 text-[10px] text-[var(--color-text-3)]">
+            Component values are approximate aftermarket retail prices (GBP). The difference between bike price and component value reflects the frame, motor, battery, and assembly premium.
+          </p>
+        </section>
+      </div>
+    )}
+
+    {!hasBikes && (
+      <div class="mt-16 text-center">
+        <p class="text-[var(--color-text-2)]">Select two bikes above to compare them side by side.</p>
+      </div>
+    )}
+  </div>
+</Base>
